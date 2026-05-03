@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador QR</title>
+  
+  <style>
+  body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background-color: #fff;
+  }
+
+  #wrap { 
+    padding: 2rem 1rem; 
+    max-width: 600px; 
+    margin: 0 auto; 
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .logo-container {
+    flex: 0 0 150px;
+    text-align: center;
+  }
+
+  .logo-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .form-container {
+    flex: 1;
+  }
+
+  .input-label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+  }
+
+  #url-input { 
+    width: 100%; 
+    box-sizing: border-box; 
+    font-size: 16px; 
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    user-select: text; 
+  }
+
+  #gen-btn { 
+    width: 100%; 
+    padding: 12px; 
+    font-size: 15px; 
+    cursor: pointer; 
+    background: #007bff; 
+    color: #fff; 
+    border: none; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    margin-top: 12px;
+  }
+
+  #qr-area { 
+    margin-top: 1.5rem; 
+    display: none; 
+    align-items: center; 
+    gap: 2rem; 
+    flex-wrap: wrap; 
+  }
+
+  #qr-box { background: #fff; padding: 16px; border-radius: 8px; border: 0.5px solid #ddd; display: inline-block; }
+  
+  #size-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  #size-row label { font-size: 13px; color: #666; font-weight: bold; }
+  #size-out { font-size: 13px; font-weight: 500; min-width: 44px; }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 14px;
+    color: #666;
+    background-color: #f9f9f9;
+    border-top: 1px solid #eee;
+  }
+  </style>
+</head>
+
+<body>
+<div id="wrap">
+  <div class="logo-container">
+    <img src="oqrion_sin_fondo_v2_upscayl_4x_upscayl-standard-4x.png" alt="oQRion Logo">
+  </div>
+
+  <div class="form-container">
+    <label class="input-label" for="url-input">Pega un link:</label>
+    <input id="url-input" type="url" placeholder="https://ejemplo.com" />
+    
+    <div id="size-row">
+      <label for="size-range">Tamaño</label>
+      <input type="range" id="size-range" min="128" max="400" step="1" value="200" style="flex:1;" />
+      <span id="size-out">200 px</span>
+    </div>
+    
+    <button id="gen-btn">Generar código QR</button>
+    
+    <div id="qr-area">
+      <div id="qr-box"><canvas id="qr-canvas"></canvas></div>
+      <div id="qr-meta">
+        <button id="dl-btn" style="margin-top: 10px; padding: 8px; cursor: pointer;">Descargar PNG</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © <span id="year"></span> EdyzL | Program.
+</footer>
+
+<script type="module">
+import QRCode from 'https://esm.sh/qrcode@1.5.3';
+
+// --- BLOQUEO DE CLIC DERECHO ---
+window.addEventListener('contextmenu', function (e) {
+  e.preventDefault();
+}, false);
+
+// --- BLOQUEO DE INSPECCIÓN (F12, Ctrl+U, etc) ---
+document.addEventListener('keydown', function(e) {
+  if (e.keyCode == 123 || 
+      (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || 
+      (e.ctrlKey && e.keyCode == 85)) {
+    e.preventDefault();
+  }
+}, false);
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+const input = document.getElementById('url-input');
+const genBtn = document.getElementById('gen-btn');
+const qrArea = document.getElementById('qr-area');
+const canvas = document.getElementById('qr-canvas');
+const sizeRange = document.getElementById('size-range');
+const sizeOut = document.getElementById('size-out');
+
+sizeRange.addEventListener('input', () => { sizeOut.textContent = sizeRange.value + ' px'; });
+
+async function generate() {
+  const url = input.value.trim();
+  if (!url) return;
+  const size = parseInt(sizeRange.value, 10);
+  try {
+    await QRCode.toCanvas(canvas, url, { width: size, margin: 2 });
+    qrArea.style.display = 'flex';
+  } catch(e) { console.error(e); }
+}
+
+genBtn.addEventListener('click', generate);
+
+document.getElementById('dl-btn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'qrcode.png';
+  a.click();
+});
+</script>
+</body>
+</html>
